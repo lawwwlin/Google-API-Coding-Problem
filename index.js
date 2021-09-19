@@ -12,15 +12,15 @@ const TOKEN_PATH = 'token.json';
 // Load client secrets from a local file.
 
 
-fs.readFile('credentials.json', (err, content) => {
+fs.readFile('credentials.json', async (err, content) => {
   if (err) return console.log('Error loading client secret file:', err);
-  // Authorize a client with credentials, then call the Google Sheets API.
-  const auth = authorize(JSON.parse(content));
-  setTimeout(() => {
-    console.log("auth2", auth);
-  }, 1000)
+  // Authorize a client with credentials
+  const auth = await authorize(JSON.parse(content));
   console.log("auth1", auth);
-  // authorize(JSON.parse(content), getSheetData, '1hnQP8tYU9PAv6eVknGsMld6yWZ6cmbVpuc6b-_085nQ');
+
+  // call Google API with authorized credentials
+  const sheetData = await getSheetData(auth, '1hnQP8tYU9PAv6eVknGsMld6yWZ6cmbVpuc6b-_085nQ');
+
   // authorize(JSON.parse(content), getFilesInFolder, '11PJEUZl8QmZlNSl23_AfF3cjxKa-wgJH');
   // console.log(temp);
 });
@@ -31,19 +31,20 @@ fs.readFile('credentials.json', (err, content) => {
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-async function authorize(credentials, callback, fileId) {
+async function authorize(credentials) {
   const {client_secret, client_id, redirect_uris} = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
       client_id, client_secret, redirect_uris[0]);
 
   // Check if we have previously stored a token.
-  fs.readFile(TOKEN_PATH, (err, token) => {
+  await fs.readFile(TOKEN_PATH, (err, token) => {
     console.log('reading');
     if (err) return getNewToken(oAuth2Client);
     oAuth2Client.setCredentials(JSON.parse(token));
     console.log("inside authroize", oAuth2Client)
     Promise.resolve(oAuth2Client);
   });
+  return oAuth2Client;
 }
 
 /**
@@ -78,23 +79,27 @@ function getNewToken(oAuth2Client, callback, fileId) {
 }
 
 /**
- * Prints the names and majors of students in a sample spreadsheet:
- * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
+ * get the product name and image file name in the spreadsheet:
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
+ * @param {string} fileId id of the Google sheets.
  */
-function getSheetData(auth, fileId) {
+async function getSheetData(auth, fileId) {
+  const data = [];
   const sheets = google.sheets({version: 'v4', auth});
   sheets.spreadsheets.values.get({
     spreadsheetId: fileId,
     range: 'Sheet1!A2:E',
-  }, (err, res) => {
+  }, async (err, res) => {
     if (err) return console.log('The API returned an error: ' + err);
     const rows = res.data.values;
     if (rows.length) {
       console.log('Product name, Image file:');
-      // Print columns A and E, which correspond to indices 0 and 4.
+      // Print columns A and B, which correspond to indices 0 and 1.
       rows.map((row) => {
+        obj = {}
+        obj[row[0]] = row[1];
         console.log(`${row[0]}, ${row[1]}`);
+        data.push(obj);
       });
     } else {
       console.log('No data found.');
