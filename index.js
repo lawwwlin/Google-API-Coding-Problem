@@ -10,12 +10,19 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly', 'https:
 const TOKEN_PATH = 'token.json';
 
 // Load client secrets from a local file.
+
+
 fs.readFile('credentials.json', (err, content) => {
   if (err) return console.log('Error loading client secret file:', err);
   // Authorize a client with credentials, then call the Google Sheets API.
+  const auth = authorize(JSON.parse(content));
+  setTimeout(() => {
+    console.log("auth2", auth);
+  }, 1000)
+  console.log("auth1", auth);
   // authorize(JSON.parse(content), getSheetData, '1hnQP8tYU9PAv6eVknGsMld6yWZ6cmbVpuc6b-_085nQ');
-  const temp = authorize(JSON.parse(content), getFilesInFolder, '11PJEUZl8QmZlNSl23_AfF3cjxKa-wgJH');
-  console.log("final readfile", temp);
+  // authorize(JSON.parse(content), getFilesInFolder, '11PJEUZl8QmZlNSl23_AfF3cjxKa-wgJH');
+  // console.log(temp);
 });
 
 /**
@@ -31,9 +38,11 @@ async function authorize(credentials, callback, fileId) {
 
   // Check if we have previously stored a token.
   fs.readFile(TOKEN_PATH, (err, token) => {
-    if (err) return getNewToken(oAuth2Client, callback);
+    console.log('reading');
+    if (err) return getNewToken(oAuth2Client);
     oAuth2Client.setCredentials(JSON.parse(token));
-    return callback(oAuth2Client, fileId);
+    console.log("inside authroize", oAuth2Client)
+    Promise.resolve(oAuth2Client);
   });
 }
 
@@ -43,7 +52,7 @@ async function authorize(credentials, callback, fileId) {
  * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
  * @param {getEventsCallback} callback The callback for the authorized client.
  */
-function getNewToken(oAuth2Client, callback) {
+function getNewToken(oAuth2Client, callback, fileId) {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
@@ -63,7 +72,7 @@ function getNewToken(oAuth2Client, callback) {
         if (err) return console.error(err);
         console.log('Token stored to', TOKEN_PATH);
       });
-      callback(oAuth2Client);
+      callback(oAuth2Client, fileId);
     });
   });
 }
@@ -97,19 +106,21 @@ function getSheetData(auth, fileId) {
  * get all file content inside given folder id
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
-function getFilesInFolder(auth, fileId) {
+async function getFilesInFolder(auth, fileId) {
   const drive = google.drive({version: 'v3', auth});
   drive.files.list({
     q: `"${fileId}" in parents`,
     fields: 'nextPageToken, files(id, name)',
-  }, (err, res) => {
+  }, async (err, res) => {
     if (err) return console.log('The API returned an error: ' + err);
     const files = res.data.files;
     if (files.length) {
       files.map((file) => {
         console.log(`${JSON.stringify(file)}`);
         console.log(`${file.name} (${file.id})`);
-        return file;
+      });
+      await new Promise(resolve => {
+        resolve(files);
       });
     } else {
       console.log('No files found.');
