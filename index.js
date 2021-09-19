@@ -3,7 +3,7 @@ const readline = require('readline');
 const {google} = require('googleapis');
 
 // If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly', 'https://www.googleapis.com/auth/drive.metadata.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'];
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
@@ -16,16 +16,30 @@ fs.readFile('credentials.json', async (err, content) => {
   if (err) return console.log('Error loading client secret file:', err);
   // Authorize a client with credentials
   const auth = authorize(JSON.parse(content));
-  console.log("auth1", auth);
   
   // call Google API with authorized credentials
-  const sheetData = await getSheetData(auth, '1hnQP8tYU9PAv6eVknGsMld6yWZ6cmbVpuc6b-_085nQ');
+  const sheetData = getSheetData(auth, '1hnQP8tYU9PAv6eVknGsMld6yWZ6cmbVpuc6b-_085nQ');
+  const fileDataMainfolder = getFilesInFolder(auth, '11PJEUZl8QmZlNSl23_AfF3cjxKa-wgJH');
+  let photoData = [];
+  
+  // wait 0.6 seconds until data is set.
   setTimeout(() => {
-    console.log("sheetdata", sheetData);
-  }, 500);
+    // console.log("sheetdata", sheetData);
+    // console.log('filedata', fileDataMainfolder);
+    fileDataMainfolder.map((file) => {
+      const photos = getFilesAndCopy(auth, file.id, '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH');
+      setTimeout(() => {
+        // console.log('photos', photos)
+        photoData = photoData.concat(photos);
+      }, 300);
+    });
 
-  // authorize(JSON.parse(content), getFilesInFolder, '11PJEUZl8QmZlNSl23_AfF3cjxKa-wgJH');
-  // console.log(temp);
+    setTimeout(() => {
+      console.log('photoData', photoData);
+      console.log(photoData.length);
+    }, 300);
+    
+  }, 600);
 });
 
 /**
@@ -40,12 +54,14 @@ function authorize(credentials) {
       client_id, client_secret, redirect_uris[0]);
 
   // Check if we have previously stored a token.
-  const token = fs.readFileSync(TOKEN_PATH, (err) => {
-    console.log('reading');
+  try {
+    const token = fs.readFileSync(TOKEN_PATH);
+    oAuth2Client.setCredentials(JSON.parse(token));
+    return oAuth2Client;
+  }
+  catch (err) {
     if (err) return getNewToken(oAuth2Client);
-  });
-  oAuth2Client.setCredentials(JSON.parse(token));
-  return oAuth2Client;
+  }
 }
 
 /**
@@ -54,7 +70,7 @@ function authorize(credentials) {
  * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
  * @param {getEventsCallback} callback The callback for the authorized client.
  */
-function getNewToken(oAuth2Client, callback, fileId) {
+function getNewToken(oAuth2Client) {
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
@@ -74,9 +90,10 @@ function getNewToken(oAuth2Client, callback, fileId) {
         if (err) return console.error(err);
         console.log('Token stored to', TOKEN_PATH);
       });
-      callback(oAuth2Client, fileId);
+      return oAuth2Client;
     });
   });
+  return oAuth2Client;
 }
 
 /**
@@ -84,7 +101,7 @@ function getNewToken(oAuth2Client, callback, fileId) {
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  * @param {string} fileId id of the Google sheets.
  */
-async function getSheetData(auth, fileId) {
+function getSheetData(auth, fileId) {
   const data = [];
   const sheets = google.sheets({version: 'v4', auth});
   sheets.spreadsheets.values.get({
@@ -94,8 +111,7 @@ async function getSheetData(auth, fileId) {
     if (err) return console.log('The API returned an error: ' + err);
     const rows = res.data.values;
     if (rows.length) {
-      console.log('Product name, Image file:');
-      // Print columns A and B, which correspond to indices 0 and 1.
+      // get columns A and B, which correspond to indices 0 and 1.
       rows.map((row) => {
         obj = {}
         obj[row[0]] = row[1];
@@ -113,24 +129,57 @@ async function getSheetData(auth, fileId) {
  * get all file content inside given folder id
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
-async function getFilesInFolder(auth, fileId) {
+function getFilesInFolder(auth, fileId) {
+  const data = [];
   const drive = google.drive({version: 'v3', auth});
   drive.files.list({
-    q: `"${fileId}" in parents`,
+    q: `"${fileId}" in parents and not name contains '.ds_store'`,
     fields: 'nextPageToken, files(id, name)',
-  }, async (err, res) => {
+  }, (err, res) => {
     if (err) return console.log('The API returned an error: ' + err);
     const files = res.data.files;
     if (files.length) {
       files.map((file) => {
-        console.log(`${JSON.stringify(file)}`);
-        console.log(`${file.name} (${file.id})`);
-      });
-      await new Promise(resolve => {
-        resolve(files);
+        data.push(file);
       });
     } else {
       console.log('No files found.');
     }
   });
+  return data;
+}
+
+/**
+ * get all file content inside given folder id
+ * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
+ */
+ function getFilesAndCopy(auth, fileId, destinationId) {
+  const data = [];
+  const drive = google.drive({version: 'v3', auth});
+  drive.files.list({
+    q: `"${fileId}" in parents and not name contains '.ds_store'`,
+    fields: 'nextPageToken, files(id, name)',
+  }, (err, res) => {
+    if (err) return console.log('The API returned an error: ' + err);
+    const files = res.data.files;
+    if (files.length) {
+      files.map((file) => {
+        data.push(file);
+        drive.files.copy({
+          "fileId": file.id,
+          "resource": {
+            "driveId": destinationId
+          }
+        })
+        .then(function(response) {
+          // Handle the results here (response.result has the parsed body).
+          console.log("Response", response);
+        },
+        function(err) { console.error("Execute error", err); });
+      });
+    } else {
+      console.log('No files found.');
+    }
+  });
+  return data;
 }
