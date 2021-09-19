@@ -15,11 +15,14 @@ const TOKEN_PATH = 'token.json';
 fs.readFile('credentials.json', async (err, content) => {
   if (err) return console.log('Error loading client secret file:', err);
   // Authorize a client with credentials
-  const auth = await authorize(JSON.parse(content));
+  const auth = authorize(JSON.parse(content));
   console.log("auth1", auth);
-
+  
   // call Google API with authorized credentials
   const sheetData = await getSheetData(auth, '1hnQP8tYU9PAv6eVknGsMld6yWZ6cmbVpuc6b-_085nQ');
+  setTimeout(() => {
+    console.log("sheetdata", sheetData);
+  }, 500);
 
   // authorize(JSON.parse(content), getFilesInFolder, '11PJEUZl8QmZlNSl23_AfF3cjxKa-wgJH');
   // console.log(temp);
@@ -31,19 +34,17 @@ fs.readFile('credentials.json', async (err, content) => {
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-async function authorize(credentials) {
+function authorize(credentials) {
   const {client_secret, client_id, redirect_uris} = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
       client_id, client_secret, redirect_uris[0]);
 
   // Check if we have previously stored a token.
-  await fs.readFile(TOKEN_PATH, (err, token) => {
+  const token = fs.readFileSync(TOKEN_PATH, (err) => {
     console.log('reading');
     if (err) return getNewToken(oAuth2Client);
-    oAuth2Client.setCredentials(JSON.parse(token));
-    console.log("inside authroize", oAuth2Client)
-    Promise.resolve(oAuth2Client);
   });
+  oAuth2Client.setCredentials(JSON.parse(token));
   return oAuth2Client;
 }
 
@@ -89,7 +90,7 @@ async function getSheetData(auth, fileId) {
   sheets.spreadsheets.values.get({
     spreadsheetId: fileId,
     range: 'Sheet1!A2:E',
-  }, async (err, res) => {
+  }, (err, res) => {
     if (err) return console.log('The API returned an error: ' + err);
     const rows = res.data.values;
     if (rows.length) {
@@ -98,13 +99,14 @@ async function getSheetData(auth, fileId) {
       rows.map((row) => {
         obj = {}
         obj[row[0]] = row[1];
-        console.log(`${row[0]}, ${row[1]}`);
         data.push(obj);
       });
+      // console.log('data', data);
     } else {
       console.log('No data found.');
     }
   });
+  return data;
 }
 
 /**
