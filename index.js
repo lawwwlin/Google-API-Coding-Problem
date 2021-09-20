@@ -2,6 +2,7 @@ const {google} = require('googleapis');
 
 // Google Sheet id of dogs breed list
 const SHEET_ID = '1N0IHTEEB7jTqE8YaJeW1BKXC9FrRLJLDDIdWkZWvhb8';
+
 // Google Drive id of the main drive containing sub-folders of dog photos
 const DRIVE_ID = '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH';
 
@@ -24,32 +25,32 @@ const sheets = google.sheets({version: 'v4', auth: oAuth2Client});
 
 // call Google API
 const run = async () => {
-  
-  // const sheetDataArray = await getSheetData(SHEET_ID);
-  // console.log("sheetDataArray", sheetDataArray);
-
+  // get content from main drive
   const fileDataArray = await getFilesInFolder(DRIVE_ID);
-  // console.log("fileDataArray", fileDataArray);
   
   // go through each subfolder and return the array of photos
   const photosNestedArray = await Promise.all(fileDataArray.map(async (file) => {
     const photo = await getFilesInFolder(file.id);
     return photo;
   }));
-
+  
   // flatten the nested arrays to be just array with objects
   const photosArray = [].concat.apply([], photosNestedArray);
-  console.log("photosdata", photosArray);
-
+  
+  // create new folder in main drive to store copies of files
   // const newFolderId = await createFolder(DRIVE_ID);
-  // console.log('newFolderId', newFolderId);
-
+  
+  // copy renamed files to new folder
+  photosArray.forEach(photo => {
+    copyFilesTo(photo, '19f8Hwbsc9_BBEwOVyNM_47083OYsHgNQ');
+  });
+  
+  // get breed name from sheets
+  // const sheetDataArray = await getSheetData(SHEET_ID);
+  // console.log("sheetDataArray", sheetDataArray);
 };
+
 run();
-
-
-
-
 
 /**
  * get the product name and image file name in the spreadsheet:
@@ -66,8 +67,7 @@ async function getSheetData(fileId) {
   } catch (err) {
     console.log(err.message);
   };
-
-}
+};
 
 /**
  * get all file content inside given folder id
@@ -76,13 +76,13 @@ async function getFilesInFolder(fileId) {
   try {
     const response = await drive.files.list({
       q: `"${fileId}" in parents and not name contains '.ds_store'`,
-      fields: 'nextPageToken, files(id, name, mimeType)',
+      fields: 'nextPageToken, files(id, name)',
     });
     return Promise.resolve(response.data.files);
   } catch (err) {
     console.log(err.message);
   }
-}
+};
 
 /**
  * create new folder and return the folder Id
@@ -103,37 +103,39 @@ async function getFilesInFolder(fileId) {
   } catch (err) {
     console.log(err.message);
   };
-}
+};
+
+async function copyFilesTo(file, destinationId) {
+  const fileName = unifyName(file.name);
+  const resource = {
+    'name': fileName,
+    'parents': [destinationId]
+  }
+  try {
+    const response = await drive.files.copy({
+      'fileId': file.id,
+      resource
+    });
+    console.log(response.data);
+    return Promise.resolve(response.data);
+  } catch (err) {
+    console.log(err.message);
+  };
+};
 
 /**
- * get all file content inside given folder id
+ * given a string file name with extension (dog.jpg):
+ * 1. change the name to lowercase, keep file extension
+ * 2. remove none letter and none number characters
+ * 3. replace space with '-'
  */
- function getFilesAndCopy(fileId, destinationId) {
-  const data = [];
-  drive.files.list({
-    q: `"${fileId}" in parents and not name contains '.ds_store'`,
-    fields: 'nextPageToken, files(id, name)',
-  }, (err, res) => {
-    if (err) return console.log('The API returned an error: ' + err);
-    const files = res.data.files;
-    if (files.length) {
-      files.map((file) => {
-        data.push(file);
-        drive.files.copy({
-          "fileId": file.id,
-          "resource": {
-            "driveId": destinationId
-          }
-        })
-        .then(function(response) {
-          // Handle the results here (response.result has the parsed body).
-          console.log("Response", response);
-        },
-        function(err) { console.error("Execute error", err); });
-      });
-    } else {
-      console.log('No files found.');
-    }
-  });
-  return data;
-}
+function unifyName(string) {
+  const lowered = string.toLowerCase();
+  const strArr = lowered.split('.');
+  const fileExtension = strArr[1];
+  const characters = strArr[0];
+  // replace all none-alphanumeric characters with space and split into array
+  const arr = characters.trim().replace(/[^0-9a-z]/gi, ' ').trim().split(' ');
+  const unified = arr.join('-');
+  return unified + '.' + fileExtension;
+};
