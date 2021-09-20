@@ -15,4 +15,7 @@ Use the Google Drive and Google Sheet API to access the Google Sheet and Google 
 
 ### API Reference:
 https://developers.google.com/drive/api/v3/about-auth \
-https://developers.google.com/drive/api/v3/quickstart/nodejs
+https://developers.google.com/drive/api/v3/quickstart/nodejs \
+\
+set-up and authorize client tutorial: \
+https://www.youtube.com/watch?v=1y0-IfRW114
