@@ -2,7 +2,7 @@
 The following Google Drive contains a Google Sheet file which has a list of dog breeds and file ids for Google Drive\
 https://drive.google.com/drive/u/0/folders/1wM23wwuuhuQY9S_LnEGE_1SvbSeWVqcD
 
-The following Google Drive contains 3 folders of image files for the dogs. 
+The following Google Drive contains 3 folders of image files for the dogs.\
 https://drive.google.com/drive/u/0/folders/10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH
 
 The image file name is close to the dog breed name in the Google Sheet, but can be different. (For example, Corgi has a corresponding image: "standing CORGI.jpg")
@@ -14,5 +14,5 @@ Build a command line code, to loop through the dogs list Google Sheet and dog im
 Use the Google Drive and Google Sheet API to access the Google Sheet and Google Drive files
 
 ### API Reference:
-https://developers.google.com/drive/api/v3/about-auth /
+https://developers.google.com/drive/api/v3/about-auth\
 https://developers.google.com/drive/api/v3/quickstart/nodejs
