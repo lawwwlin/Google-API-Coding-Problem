@@ -4,7 +4,7 @@ const SHEET_ID = '1N0IHTEEB7jTqE8YaJeW1BKXC9FrRLJLDDIdWkZWvhb8';
 // Google Drive id of the main drive containing sub-folders of dog photos
 const DRIVE_ID = '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH';
 
-const { getFilesInFolder, getSheetData, createFolder, copyFilesTo, matchFileWithSheet, writeToSheet } = require('./helpers');
+const { getFilesInFolder, getSheetData, createFolder, copyFilesTo: copyFileTo, matchFileWithSheet, writeToSheet } = require('./helpers');
 
 
 // run calls to Google API
@@ -27,7 +27,7 @@ const run = async () => {
   
   // copy renamed files to new folder
   const copiedNestedPhotosArray = await Promise.all(photosArray.map(async (file) => {
-    const photo = await copyFilesTo(file, newFolderId);
+    const photo = await copyFileTo(file, newFolderId);
     return photo;
   }));
 
