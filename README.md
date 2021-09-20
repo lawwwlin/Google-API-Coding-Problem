@@ -1,8 +1,9 @@
 ## Inspired by a coding interview problem
-The challenge has been modified from the original tech interview problem to avoid copyright issues from the employer. The Google Drive and Google Sheets used are not the same as the one provided in the interview. All images in the Google Drive are royalty free from https://pixabay.com/ 
+The challenge has been modified from the original tech interview problem to avoid copyright issues from the employer. The Google Drive and Google Sheets used are not the same as the one provided in the interview. All images in the Google Drive are royalty free from the following link: \
+https://pixabay.com/ 
 <br />
 
-The following Google Drive contains a Google Sheets file which has a list of dog breeds and file ids for Google Drive\
+The following Google Drive contains a Google Sheets file which has a list of dog breeds and file ids for Google Drive.\
 https://drive.google.com/drive/u/0/folders/1wM23wwuuhuQY9S_LnEGE_1SvbSeWVqcD
 
 The following Google Drive contains 3 folders of image files for the dogs.\
