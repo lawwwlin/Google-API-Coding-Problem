@@ -58,6 +58,7 @@ const sheets = google.sheets({version: 'v4', auth: oAuth2Client});
  */
  async function createFolder(parentFolderId) {
   try {
+    console.log('Creating new folder');
     const fileMetadata = {
       'name': 'all-dog-images-Lawrence',
       'mimeType': 'application/vnd.google-apps.folder',
@@ -87,6 +88,7 @@ async function copyFileTo(file, destinationId) {
     'parents': [destinationId]
   }
   try {
+    console.log(`Copying ${file.name} to new folder`);
     const response = await drive.files.copy({
       'fileId': file.id,
       resource
@@ -144,6 +146,7 @@ function matchFileWithSheet(fileName, sheetName) {
     values
   };
   try {
+    console.log(`Writing data to sheet in cell ${cell}`);
     sheets.spreadsheets.values.update({
       resource,
       spreadsheetId: sheetId,
