@@ -14,5 +14,5 @@ Build a command line code, to loop through the dogs list Google Sheet and dog im
 Use the Google Drive and Google Sheet API to access the Google Sheet and Google Drive files
 
 ### API Reference:
-https://developers.google.com/drive/api/v3/about-auth\
+https://developers.google.com/drive/api/v3/about-auth \
 https://developers.google.com/drive/api/v3/quickstart/nodejs
