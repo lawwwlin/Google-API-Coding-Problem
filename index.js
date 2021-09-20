@@ -42,9 +42,7 @@ const run = async () => {
   // then write file id into sheet
   for (const i in sheetDataArray) {
     const sheetDogName = sheetDataArray[i][0];
-    console.log('dog name in sheets', sheetDogName, 'cell', parseInt(i) + 2);
     const fileFound = copiedPhotosArray.find((file) => matchFileWithSheet(file.name, sheetDogName));
-    console.log('filefound?', fileFound);
     if (fileFound) {
       writeToSheet(SHEET_ID, `B${parseInt(i) + 2}`, fileFound.id);
     }
