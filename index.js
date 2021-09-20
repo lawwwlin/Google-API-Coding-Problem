@@ -18,26 +18,29 @@ fs.readFile('credentials.json', async (err, content) => {
   const auth = authorize(JSON.parse(content));
   
   // call Google API with authorized credentials
-  const sheetData = getSheetData(auth, '1hnQP8tYU9PAv6eVknGsMld6yWZ6cmbVpuc6b-_085nQ');
-  const fileDataMainfolder = getFilesInFolder(auth, '11PJEUZl8QmZlNSl23_AfF3cjxKa-wgJH');
+  // const sheetData = getSheetData(auth, '1N0IHTEEB7jTqE8YaJeW1BKXC9FrRLJLDDIdWkZWvhb8');
+  // const fileDataMainfolder = getFilesInFolder(auth, '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH');
+  const newFolderId = createFolder(auth, '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH');
   let photoData = [];
   
   // wait 0.6 seconds until data is set.
   setTimeout(() => {
     // console.log("sheetdata", sheetData);
     // console.log('filedata', fileDataMainfolder);
-    fileDataMainfolder.map((file) => {
-      const photos = getFilesAndCopy(auth, file.id, '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH');
-      setTimeout(() => {
-        // console.log('photos', photos)
-        photoData = photoData.concat(photos);
-      }, 300);
-    });
+    console.log('newFolderId', newFolderId);
 
-    setTimeout(() => {
-      console.log('photoData', photoData);
-      console.log(photoData.length);
-    }, 300);
+    // fileDataMainfolder.map((file) => {
+    //   const photos = getFilesAndCopy(auth, file.id, '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH');
+    //   setTimeout(() => {
+    //     // console.log('photos', photos)
+    //     photoData = photoData.concat(photos);
+    //   }, 300);
+    // });
+
+    // setTimeout(() => {
+    //   console.log('photoData', photoData);
+    //   console.log(photoData.length);
+    // }, 300);
     
   }, 600);
 });
@@ -147,6 +150,31 @@ function getFilesInFolder(auth, fileId) {
     }
   });
   return data;
+}
+
+/**
+ * create new folder and return the folder Id
+ * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
+ */
+ function createFolder(auth, parentFolderId) {
+  const drive = google.drive({version: 'v3', auth});
+  const fileMetadata = {
+    'name': 'all-dog-images-Lawrence',
+    'mimeType': 'application/vnd.google-apps.folder',
+    parents: [parentFolderId]
+  };
+  
+  drive.files.create({
+    resource: fileMetadata,
+    fields: 'id',
+  }, (err, file) => {
+    if (err) {
+      // Handle error
+      console.error(err);
+    } else {
+      console.log('Folder Id: ', file.id);
+    }
+  });
 }
 
 /**
