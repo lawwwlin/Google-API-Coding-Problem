@@ -17,7 +17,9 @@ const drive = google.drive({version: 'v3', auth: oAuth2Client});
 const sheets = google.sheets({version: 'v4', auth: oAuth2Client});
 
 /**
- * get all file content inside given folder id
+ * Get all file content inside given folder id
+ * @param {String} fileId Id of the Google File
+ * @return {[Object]} Array of files inside folder
  */
  async function getFilesInFolder(fileId) {
   try {
@@ -32,8 +34,9 @@ const sheets = google.sheets({version: 'v4', auth: oAuth2Client});
 };
 
 /**
- * get the product name and image file name in the spreadsheet:
- * @param {string} fileId id of the Google sheets.
+ * Get the product name and image file name in the spreadsheet:
+ * @param {String} fileId Id of the Google Sheets
+ * @return {[Object]} Array of data inside Sheets
  */
  async function getSheetData(fileId) {
   try {
@@ -49,7 +52,9 @@ const sheets = google.sheets({version: 'v4', auth: oAuth2Client});
 };
 
 /**
- * create new folder and return the folder Id
+ * Create a new folder inside the parent and return the folder Id
+ * @param {String} parentFolderId Id of the parent folder
+ * @return {String} New folder's id
  */
  async function createFolder(parentFolderId) {
   try {
@@ -69,7 +74,13 @@ const sheets = google.sheets({version: 'v4', auth: oAuth2Client});
   };
 };
 
-async function copyFilesTo(file, destinationId) {
+/**
+ * Copy and rename the file to the specified folder
+ * @param {Object} file File object to be copied
+ * @param {String} destinationId Id of the destination folder
+ * @return {[Object]} Array of files that got copied with updated name
+ */
+async function copyFileTo(file, destinationId) {
   const fileName = unifyName(file.name);
   const resource = {
     'name': fileName,
@@ -87,10 +98,12 @@ async function copyFilesTo(file, destinationId) {
 };
 
 /**
- * given a string file name with extension (dog.jpg):
+ * Given a string file name with extension (dog.jpg):
  * 1. change the name to lowercase, keep file extension
  * 2. remove none letter and none number characters
  * 3. replace space with '-'
+ * @param {String} string The string to modify
+ * @return {String} The modiefied string
  */
  function unifyName(string) {
   const lowered = string.toLowerCase();
@@ -104,7 +117,10 @@ async function copyFilesTo(file, destinationId) {
 };
 
 /**
- * 
+ * Match given file name to given sheet name
+ * @param {String} fileName The file name to check
+ * @param {String} sheetName The sheet name to check
+ * @return {Boolean} True if all words in sheetName is in the file name, else false
  */
 function matchFileWithSheet(fileName, sheetName) {
   const words = sheetName.split(' ');
@@ -117,7 +133,10 @@ function matchFileWithSheet(fileName, sheetName) {
 };
 
 /**
- * 
+ * Write data to specified Google Sheets
+ * @param {String} sheetId The Google Sheet to write to
+ * @param {String} cell The cell to input
+ * @param {String} value The data to put into the cell
  */
  async function writeToSheet(sheetId, cell, value) {
   const values = [[value]];
@@ -136,4 +155,4 @@ function matchFileWithSheet(fileName, sheetName) {
   };
 };
 
-module.exports = {getFilesInFolder, getSheetData, createFolder, copyFilesTo, matchFileWithSheet, writeToSheet};
+module.exports = {getFilesInFolder, getSheetData, createFolder, copyFileTo, matchFileWithSheet, writeToSheet};
