@@ -1,13 +1,9 @@
-const fs = require('fs');
-const readline = require('readline');
 const {google} = require('googleapis');
 
-// If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'];
-// The file token.json stores the user's access and refresh tokens, and is
-// created automatically when the authorization flow completes for the first
-// time.
-const TOKEN_PATH = 'token.json';
+// Google Sheet id of dogs breed list
+const SHEET_ID = '1N0IHTEEB7jTqE8YaJeW1BKXC9FrRLJLDDIdWkZWvhb8';
+// Google Drive id of the main drive containing sub-folders of dog photos
+const DRIVE_ID = '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH';
 
 // set-up the following credentials, follow https://developers.google.com/identity/protocols/oauth2
 const CLIENT_ID = '579158930170-7lq9kp2brl2t6jhq6c0aiga6scl54bu9.apps.googleusercontent.com';
@@ -25,20 +21,27 @@ oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
 const drive = google.drive({version: 'v3', auth: oAuth2Client});
 const sheets = google.sheets({version: 'v4', auth: oAuth2Client});
 
+
 // call Google API
 const run = async () => {
   
-  // const sheetData = await getSheetData('1N0IHTEEB7jTqE8YaJeW1BKXC9FrRLJLDDIdWkZWvhb8');
-  // console.log("sheetdata", sheetData);
+  // const sheetDataArray = await getSheetData(SHEET_ID);
+  // console.log("sheetDataArray", sheetDataArray);
 
-  const fileDataMainfolder = await getFilesInFolder('10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH');
-  console.log("fileDataMainfolder", fileDataMainfolder);
-  fileDataMainfolder.map((file) => {
-    const
-  });
+  const fileDataArray = await getFilesInFolder(DRIVE_ID);
+  // console.log("fileDataArray", fileDataArray);
   
+  // go through each subfolder and return the array of photos
+  const photosNestedArray = await Promise.all(fileDataArray.map(async (file) => {
+    const photo = await getFilesInFolder(file.id);
+    return photo;
+  }));
 
-  // const newFolderId = await createFolder('10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH');
+  // flatten the nested arrays to be just array with objects
+  const photosArray = [].concat.apply([], photosNestedArray);
+  console.log("photosdata", photosArray);
+
+  // const newFolderId = await createFolder(DRIVE_ID);
   // console.log('newFolderId', newFolderId);
 
 };
