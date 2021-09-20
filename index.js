@@ -9,104 +9,58 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.goo
 // time.
 const TOKEN_PATH = 'token.json';
 
-// Load client secrets from a local file.
+// set-up the following credentials, follow https://developers.google.com/identity/protocols/oauth2
+const CLIENT_ID = '579158930170-7lq9kp2brl2t6jhq6c0aiga6scl54bu9.apps.googleusercontent.com';
+const CLIENT_SECRET = '-Hoid0h89nVL8-MRe2_Gg5wW';
+const REDIRECT_URI = 'https://developers.google.com/oauthplayground';
+
+const REFRESH_TOKEN = '1//04nKLP6KoN3JwCgYIARAAGAQSNwF-L9IrzBEMjmwKUdFMt4oAmjeyy6HyuAZk7SNrjdguKjSV62kI_fjzD9DxUIW77eVDMYmAzCM';
+
+const oAuth2Client = new google.auth.OAuth2(
+  CLIENT_ID,
+  CLIENT_SECRET,
+  REDIRECT_URI
+);
+
+oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
+
+const drive = google.drive({version: 'v3', auth: oAuth2Client});
+
+const sheets = google.sheets({version: 'v4', auth: oAuth2Client});
+
+// call Google API
+// const sheetData = getSheetData('1N0IHTEEB7jTqE8YaJeW1BKXC9FrRLJLDDIdWkZWvhb8');
+// const fileDataMainfolder = getFilesInFolder('10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH');
+const newFolderId = createFolder('10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH');
+console.log('newFolderId', newFolderId);
 
 
-fs.readFile('credentials.json', async (err, content) => {
-  if (err) return console.log('Error loading client secret file:', err);
-  // Authorize a client with credentials
-  const auth = authorize(JSON.parse(content));
-  
-  // call Google API with authorized credentials
-  // const sheetData = getSheetData(auth, '1N0IHTEEB7jTqE8YaJeW1BKXC9FrRLJLDDIdWkZWvhb8');
-  // const fileDataMainfolder = getFilesInFolder(auth, '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH');
-  const newFolderId = createFolder(auth, '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH');
-  let photoData = [];
-  
-  // wait 0.6 seconds until data is set.
-  setTimeout(() => {
-    // console.log("sheetdata", sheetData);
-    // console.log('filedata', fileDataMainfolder);
-    console.log('newFolderId', newFolderId);
+let photoData = [];
 
-    // fileDataMainfolder.map((file) => {
-    //   const photos = getFilesAndCopy(auth, file.id, '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH');
-    //   setTimeout(() => {
-    //     // console.log('photos', photos)
-    //     photoData = photoData.concat(photos);
-    //   }, 300);
-    // });
 
-    // setTimeout(() => {
-    //   console.log('photoData', photoData);
-    //   console.log(photoData.length);
-    // }, 300);
-    
-  }, 600);
-});
+// console.log("sheetdata", sheetData);
+// console.log('filedata', fileDataMainfolder);
 
-/**
- * Create an OAuth2 client with the given credentials, and then execute the
- * given callback function.
- * @param {Object} credentials The authorization client credentials.
- * @param {function} callback The callback to call with the authorized client.
- */
-function authorize(credentials) {
-  const {client_secret, client_id, redirect_uris} = credentials.installed;
-  const oAuth2Client = new google.auth.OAuth2(
-      client_id, client_secret, redirect_uris[0]);
+// fileDataMainfolder.map((file) => {
+//   const photos = getFilesAndCopy(auth, file.id, '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH');
+//   setTimeout(() => {
+//     // console.log('photos', photos)
+//     photoData = photoData.concat(photos);
+//   }, 300);
+// });
 
-  // Check if we have previously stored a token.
-  try {
-    const token = fs.readFileSync(TOKEN_PATH);
-    oAuth2Client.setCredentials(JSON.parse(token));
-    return oAuth2Client;
-  }
-  catch (err) {
-    if (err) return getNewToken(oAuth2Client);
-  }
-}
+// setTimeout(() => {
+//   console.log('photoData', photoData);
+//   console.log(photoData.length);
+// }, 300);
 
-/**
- * Get and store new token after prompting for user authorization, and then
- * execute the given callback with the authorized OAuth2 client.
- * @param {google.auth.OAuth2} oAuth2Client The OAuth2 client to get token for.
- * @param {getEventsCallback} callback The callback for the authorized client.
- */
-function getNewToken(oAuth2Client) {
-  const authUrl = oAuth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: SCOPES,
-  });
-  console.log('Authorize this app by visiting this url:', authUrl);
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  rl.question('Enter the code from that page here: ', (code) => {
-    rl.close();
-    oAuth2Client.getToken(code, (err, token) => {
-      if (err) return console.error('Error while trying to retrieve access token', err);
-      oAuth2Client.setCredentials(token);
-      // Store the token to disk for later program executions
-      fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
-        if (err) return console.error(err);
-        console.log('Token stored to', TOKEN_PATH);
-      });
-      return oAuth2Client;
-    });
-  });
-  return oAuth2Client;
-}
 
 /**
  * get the product name and image file name in the spreadsheet:
- * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  * @param {string} fileId id of the Google sheets.
  */
-function getSheetData(auth, fileId) {
+function getSheetData(fileId) {
   const data = [];
-  const sheets = google.sheets({version: 'v4', auth});
   sheets.spreadsheets.values.get({
     spreadsheetId: fileId,
     range: 'Sheet1!A2:E',
@@ -130,11 +84,9 @@ function getSheetData(auth, fileId) {
 
 /**
  * get all file content inside given folder id
- * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
-function getFilesInFolder(auth, fileId) {
+function getFilesInFolder(fileId) {
   const data = [];
-  const drive = google.drive({version: 'v3', auth});
   drive.files.list({
     q: `"${fileId}" in parents and not name contains '.ds_store'`,
     fields: 'nextPageToken, files(id, name)',
@@ -154,36 +106,32 @@ function getFilesInFolder(auth, fileId) {
 
 /**
  * create new folder and return the folder Id
- * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
- function createFolder(auth, parentFolderId) {
-  const drive = google.drive({version: 'v3', auth});
-  const fileMetadata = {
-    'name': 'all-dog-images-Lawrence',
-    'mimeType': 'application/vnd.google-apps.folder',
-    parents: [parentFolderId]
-  };
-  
-  drive.files.create({
-    resource: fileMetadata,
-    fields: 'id',
-  }, (err, file) => {
-    if (err) {
-      // Handle error
-      console.error(err);
-    } else {
-      console.log('Folder Id: ', file.id);
-    }
-  });
+ async function createFolder(parentFolderId) {
+  try {
+    const fileMetadata = {
+      'name': 'all-dog-images-Lawrence',
+      'mimeType': 'application/vnd.google-apps.folder',
+      parents: [parentFolderId]
+    };
+
+    const response = await drive.files.create({
+      resource: fileMetadata,
+      fields: 'id'
+    });
+
+    console.log(response);
+
+  } catch (err) {
+    console.log(err.message);
+  }
 }
 
 /**
  * get all file content inside given folder id
- * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
- function getFilesAndCopy(auth, fileId, destinationId) {
+ function getFilesAndCopy(fileId, destinationId) {
   const data = [];
-  const drive = google.drive({version: 'v3', auth});
   drive.files.list({
     q: `"${fileId}" in parents and not name contains '.ds_store'`,
     fields: 'nextPageToken, files(id, name)',
