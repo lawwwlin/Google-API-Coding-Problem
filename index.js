@@ -6,7 +6,6 @@ const DRIVE_ID = '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH';
 
 const { getFilesInFolder, getSheetData, createFolder, copyFileTo, matchFileWithSheet, writeToSheet } = require('./helpers');
 
-
 // run calls to Google API
 const run = async () => {
   // get content from main drive
