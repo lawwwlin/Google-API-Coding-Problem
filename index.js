@@ -7,12 +7,13 @@ const DRIVE_ID = '10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH';
 const { getFilesInFolder, getSheetData, createFolder, copyFilesTo, matchFileWithSheet, writeToSheet } = require('./helpers');
 
 
-// call Google API
+// run calls to Google API
 const run = async () => {
   // get content from main drive
   const fileDataArray = await getFilesInFolder(DRIVE_ID);
   
   // go through each subfolder and return the array of photos
+  // the returned array is nested: [[], [], []]
   const photosNestedArray = await Promise.all(fileDataArray.map(async (file) => {
     const photo = await getFilesInFolder(file.id);
     return photo;
@@ -30,10 +31,10 @@ const run = async () => {
     return photo;
   }));
 
-  // array of files with id, name, mimetype
+  // array of copied files with file ids, updated names
   const copiedPhotosArray = [].concat.apply([], copiedNestedPhotosArray);
   
-  // get breed name from sheets
+  // get breed names from sheets
   const sheetDataArray = await getSheetData(SHEET_ID);
 
   // match each dog name entry in sheet with copied image file
