@@ -27,7 +27,7 @@ const sheets = google.sheets({version: 'v4', auth: oAuth2Client});
     });
     return Promise.resolve(response.data.files);
   } catch (err) {
-    console.log(err.message);
+    console.log(err);
   }
 };
 
@@ -44,7 +44,7 @@ const sheets = google.sheets({version: 'v4', auth: oAuth2Client});
     });
     return Promise.resolve(response.data.values);
   } catch (err) {
-    console.log(err.message);
+    console.log(err);
   };
 };
 
@@ -65,7 +65,7 @@ const sheets = google.sheets({version: 'v4', auth: oAuth2Client});
     });
     return Promise.resolve(response.data.id);
   } catch (err) {
-    console.log(err.message);
+    console.log(err);
   };
 };
 
@@ -80,10 +80,9 @@ async function copyFilesTo(file, destinationId) {
       'fileId': file.id,
       resource
     });
-    console.log(response.data);
     return Promise.resolve(response.data);
   } catch (err) {
-    console.log(err.message);
+    console.log(err);
   };
 };
 
@@ -107,8 +106,34 @@ async function copyFilesTo(file, destinationId) {
 /**
  * 
  */
-function matchFileWithSheet() {
-
+function matchFileWithSheet(fileName, sheetName) {
+  const words = sheetName.split(' ');
+  for (const word of words) {
+    if (!fileName.includes(word.toLowerCase())) {
+      return false;
+    }
+  }
+  return true;
 };
 
-module.exports = {getFilesInFolder, getSheetData, createFolder, copyFilesTo};
+/**
+ * 
+ */
+ async function writeToSheet(sheetId, cell, value) {
+  const values = [[value]];
+  const resource = {
+    values
+  };
+  try {
+    sheets.spreadsheets.values.update({
+      resource,
+      spreadsheetId: sheetId,
+      valueInputOption: 'RAW',
+      range: cell
+    });
+  } catch (err) {
+    console.log(err);
+  };
+};
+
+module.exports = {getFilesInFolder, getSheetData, createFolder, copyFilesTo, matchFileWithSheet, writeToSheet};
