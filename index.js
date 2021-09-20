@@ -32,11 +32,9 @@ const run = async () => {
 
   // array of files with id, name, mimetype
   const copiedPhotosArray = [].concat.apply([], copiedNestedPhotosArray);
-  // console.log(copiedPhotosArray);
   
   // get breed name from sheets
   const sheetDataArray = await getSheetData(SHEET_ID);
-  // console.log("sheetDataArray", sheetDataArray);
 
   // match each dog name entry in sheet with copied image file
   // then write file id into sheet
