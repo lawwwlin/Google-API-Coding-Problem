@@ -8,7 +8,7 @@ https://drive.google.com/drive/u/0/folders/10_HRQGt3nF2S3fc9-JxW4zvxMqIwk0XH
 The image file name is close to the dog breed name in the Google Sheet, but can be different. (For example, Corgi has a corresponding image: "standing CORGI.jpg")
 
 ### Challenge:
-Build a command line code to loop through the dogs list Google Sheet and dog image folder (including sub-folders), find the closest matching image for each dog, copy all the images to a new folder and name the folder all-dog-images-{your name}. Rename all the image files to lowercase, keep file extension, and replace the space in the image file name with “-”, remove the non letter and non number characters in the file name, put the final image name into the google sheet. (ex: standing-corgi.jpg)
+Build a command line code to loop through the dogs list Google Sheet and dog image folder (including sub-folders), find the closest matching image for each dog, copy all the images to a new folder and name the folder all-dog-images-{your name}. Rename all the image files to lowercase, keep file extension, and replace the space in the image file name with “-”, remove the none letter and none number characters in the file name, put the final image name into the google sheet. (ex: standing-corgi.jpg)
 
 ### Hint:
 Use the Google Drive and Google Sheet API to access the Google Sheet and Google Drive files
